@@ -1,0 +1,4 @@
+bd,ap,ap_descr,epg,epg_descr
+VLAN10_BD,LegacyVLANs,OldVLANs,VLAN10_EPG,WebServers
+VLAN15_BD,LegacyVLANs,OldVLANs,VLAN15_EPG,MgmtServers
+VLAN20_BD,LegacyVLANs,OldVLANs,VLAN20_EPG,DBServers

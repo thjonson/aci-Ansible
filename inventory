@@ -1,0 +1,10 @@
+[apic]
+172.16.33.100
+
+[apic:vars]
+username = admin
+password = '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+alternately_use_plaintext_password = supersecret
+tenant = Ansible-Tenant
+vrf = VRF1
+physDom = Ansible-PhysDom

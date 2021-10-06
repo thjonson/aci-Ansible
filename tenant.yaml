@@ -1,0 +1,84 @@
+---
+- name: Configure tenant policies
+  hosts: apic
+  connection: local
+  gather_facts: no
+
+  # Use aci_login as an anchor
+  vars:
+    aci_login: &aci_login
+      host: "{{ inventory_hostname }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      validate_certs: no
+      use_proxy: no
+      state: present
+
+  tasks:
+    #Read in values from CSV file
+    - name: Read info from CSV file and return a list
+      read_csv:
+        path: tenant_data.csv
+      register: tn
+      delegate_to: localhost
+
+    #Create Tenant - single value not in CSV
+    - name: Create Tenant
+      cisco.aci.aci_tenant:
+        <<: *aci_login
+        tenant: "{{ tenant }}"
+      delegate_to: localhost
+
+    #Create VRF - single value not in CSV
+    - name: Create VRF
+      cisco.aci.aci_vrf:
+        <<: *aci_login
+        tenant: "{{ tenant }}"
+        vrf: "{{ vrf }}"
+      delegate_to: localhost
+
+    #Create Bridge Domains
+    - name: Create Bridge Domains
+      cisco.aci.aci_bd:
+        <<: *aci_login
+        tenant: "{{ tenant }}"
+        bd: "{{ item.bd }}"
+        enable_routing: no
+        arp_flooding: yes
+        l2_unknown_unicast: flood
+      delegate_to: localhost
+      loop: "{{ tn.list }}"
+
+    #Create Application Profiles
+    - name: Create Application Profiles
+      cisco.aci.aci_ap:
+        <<: *aci_login
+        tenant: "{{ tenant }}"
+        ap: "{{ item.ap }}"
+        description: "{{ item.ap_descr }}"
+      delegate_to: localhost
+      loop: "{{ tn.list }}"
+
+    #Create EPGs
+    - name: Create EPGs
+      cisco.aci.aci_epg:
+        <<: *aci_login
+        tenant: "{{ tenant }}"
+        ap: "{{ item.ap }}"
+        epg: "{{ item.epg }}"
+        bd: "{{ item.bd }}"
+        description: "{{ item.epg_descr }}"
+      delegate_to: localhost
+      loop: "{{ tn.list }}"
+
+    #Associate physical domain to EPG
+    - name: Associate physical domain to EPG
+      cisco.aci.aci_epg_to_domain:
+        <<: *aci_login
+        tenant: "{{ tenant }}"
+        ap: "{{ item.ap }}"
+        epg: "{{ item.epg }}"
+        domain: "{{ physDom }}"
+        domain_type: phys
+      delegate_to: localhost
+      loop: "{{ tn.list }}"
